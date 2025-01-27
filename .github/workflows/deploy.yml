@@ -1,0 +1,42 @@
+name: Deploy with Docker Compose to GCE
+
+on:
+  push:
+    branches:
+      - main  # Trigger this on push to main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Authenticate with Google Cloud using a Service Account Key stored in GitHub Secrets
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+    # Set up Docker for use with Google Artifact Registry (if using)
+    - name: Configure Docker to use Google Artifact Registry
+      run: |
+        gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
+
+    # Build and push Docker image to Google Container Registry (GCR)
+    - name: Build and Push Docker Image
+      run: |
+        IMAGE_NAME=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_AR_REPO }}/simple-app
+        TAG=$(date +%Y%m%d%H%M%S)
+        docker build -t $IMAGE_NAME:$TAG .
+        docker push $IMAGE_NAME:$TAG
+
+    # SSH into GCE instance and deploy with Docker Compose
+    - name: Deploy with Docker Compose on GCE
+      run: |
+        ssh -o StrictHostKeyChecking=no -i ${{ secrets.GCE_SSH_PRIVATE_KEY }} ${GCE_USER}@${GCE_IP} << EOF
+          cd /home/hakim.rizki/container-3/simple-app
+          # Update the Docker Compose file with the new image tag
+          sed -i "s|image:.*|image: $IMAGE_NAME:$TAG|" docker-compose.yml
+          # Pull the new image and restart the services
+          docker-compose pull
+          docker-compose up -d
+        EOF
