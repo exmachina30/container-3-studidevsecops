@@ -21,6 +21,10 @@ jobs:
       run: |
         gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
 
+    - name: List files in the repository
+      run: |
+        ls -R
+
     # Build and push Docker image to Google Container Registry (GCR)
     - name: Build and Push Docker Image
       run: |
