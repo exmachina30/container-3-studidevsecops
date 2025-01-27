@@ -21,16 +21,12 @@ jobs:
       run: |
         gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
 
-    - name: List files in the repository
-      run: |
-        ls -R
-
     # Build and push Docker image to Google Container Registry (GCR)
     - name: Build and Push Docker Image
       run: |
         IMAGE_NAME=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_AR_REPO }}/simple-app
         TAG=$(date +%Y%m%d%H%M%S)
-        docker build -t $IMAGE_NAME:$TAG .
+        docker build -f container-3-studidevsecops/Dockerfile -t $IMAGE_NAME:$TAG container-3-studidevsecops/
         docker push $IMAGE_NAME:$TAG
 
     # SSH into GCE instance and deploy with Docker Compose
