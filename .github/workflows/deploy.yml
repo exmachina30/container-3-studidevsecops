@@ -26,7 +26,7 @@ jobs:
       run: |
         IMAGE_NAME=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_AR_REPO }}/simple-app
         TAG=$(date +%Y%m%d%H%M%S)
-        docker build -f container-3-studidevsecops/Dockerfile $IMAGE_NAME:$TAG .
+        docker build -f container-3-studidevsecops/Dockerfile $IMAGE_NAME:$TAG simple-app .
         docker push $IMAGE_NAME:$TAG
 
     # SSH into GCE instance and deploy with Docker Compose
